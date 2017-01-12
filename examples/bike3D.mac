@@ -1,0 +1,113 @@
+/* 
+
+ Copyright (C) 2003 Olivier VERLINDEN
+     Service de Mecanique rationnelle, Dynamique et Vibrations
+     Faculte Polytechnique de Mons
+     31, Bd Dolez, 7000 MONS (Belgium)
+     Olivier.Verlinden@fpms.ac.be
+
+ This file is part of EasyDyn
+
+ EasyDyn is free software; you can redistribute it and/or modify it
+ under the terms of the GNU General Public License as published by the
+ Free Software Foundation; either version 2, or (at your option) any
+ later version.
+
+ EasyDyn is distributed in the hope that it will be useful, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with EasyDyn; see the file COPYING.  If not, write to the Free
+ Software Foundation, 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+
+                            FACULTE POLYTECHNIQUE DE MONS
+
+               service de Mecanique Rationnelle, Dynamique et Vibrations
+
+
+                    -----------------------------------------------
+                                fichier utilisateur
+                             (ecrit en language MuPAD)
+
+
+                  Ir. Georges KOUROUSSIS - mars 2003
+
+*/
+
+
+/* Title of the application */
+title: "Simulation of a simplified bike";
+filename: "bike3D";
+
+/* Definition of nbrdof  : Number of degrees of freedom
+               nbrbody : Number of bodies
+               nbrcont : Number of constraints (unused in this version). */
+nbrdof: 9;
+nbrbody: 3;
+nbrdep: 0;
+
+/* Gravity vector */
+gravity[1]: 0.0;
+gravity[2]: 0.0;
+gravity[3]: -9.81;
+
+/* Eventual constants */
+L:1.0;  /*   wheelbase */
+h: 0.5; /* height of CG wrt to center of wheel */
+R1: 0.35; /* outer radius of wheel */
+R2: 0.05; /* half-width of tire */
+m0: 80.0;
+mw: 2.0;
+vini: 5.0; /*  initial speed */
+
+/* Inertia characteristics */
+mass[1]: m0;
+mass[2]: mw;
+mass[3]: mw;
+Ixx[1]: m0*1.5*1.5/12;
+Iyy[1]: m0*1.5*1.5/12;
+Izz[1]: m0*0.3*0.3/12;
+Ixx[2]: mw*R1*R1/4;
+Iyy[2]: mw*R1*R1/2;
+Izz[2]: mw*R1*R1/4;
+Ixx[3]: mw*R1*R1/4;
+Iyy[3]: mw*R1*R1/2;
+Izz[3]: mw*R1*R1/4;
+
+/* Definition of the position matrices */
+T0G[1]: Tdisp(q[1],q[2],q[3]).Trotz(q[4]).Troty(q[5]).Trotx(q[6]);
+TrefG[2]: Tdisp(-L/2,0,-h).Troty(q[7]);
+BodyRef[2]: 1;
+TrefG[3]: Tdisp(L/2,0,-h).Troty(-0.3).Trotz(q[8]).Troty(q[9]);
+BodyRef[3]: 1;
+
+/* Initial conditions */
+qi[3]: h+R1;
+qdi[1]: vini;
+qdi[7]: vini/R1;
+qdi[9]: vini/R1;
+
+/* Simulation parameters */
+FinalTime: 5.0;
+StepSave: 0.1;
+StepMax: 0.05;
+
+SIMPLIFY: 1;
+/* Set FORCES to 1 in case you want to include *.AppEff.cpp into procedure
+ AddAppliedEfforts() to define forces other than gravity */
+FORCES: 1;
+/* Set ANIM to 1 in case you want CaGEM to generate the skeleton code
+ for visualization and animation of the system */
+ANIM: 1;
+/* Set STATIC to 1 in case you want CaGEM to generate the code
+ to search for static equilibrium before integration */
+STATIC: 1;
+/* Set PLOT to 1 in case you want CaGEM to generate the GNUPLOT code
+ to plot the evolution of position, velocity and acceeration */
+PLOT: 1;
+/* SET LATEX_FR to 1 if you want the LaTeX report in French */
+LATEX_FR: 0;
+/* SET LATEX_EN to 1 if you want the LaTeX report in English */
+LATEX_EN: 0;

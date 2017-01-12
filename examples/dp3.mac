@@ -1,0 +1,94 @@
+/* 
+
+ Copyright (C) 2003 Olivier VERLINDEN
+     Service de Mecanique rationnelle, Dynamique et Vibrations
+     Faculte Polytechnique de Mons
+     31, Bd Dolez, 7000 MONS (Belgium)
+     Olivier.Verlinden@fpms.ac.be
+
+ This file is part of EasyDyn
+
+ EasyDyn is free software; you can redistribute it and/or modify it
+ under the terms of the GNU General Public License as published by the
+ Free Software Foundation; either version 2, or (at your option) any
+ later version.
+
+ EasyDyn is distributed in the hope that it will be useful, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with EasyDyn; see the file COPYING.  If not, write to the Free
+ Software Foundation, 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+
+                            FACULTE POLYTECHNIQUE DE MONS
+
+               service de Mecanique Rationnelle, Dynamique et Vibrations
+
+
+                    -----------------------------------------------
+                                fichier utilisateur
+                             (ecrit en language MuPAD)
+
+
+                  Ir. Georges KOUROUSSIS - mars 2003
+
+
+
+
+ Title of the application */
+title:"Simulation of a double pendulum";
+
+/* Definition of nbrdof  : Number of degrees of freedom
+               nbrbody : Number of bodies
+               nbrcont : Number of constraints (unused in this version).*/
+
+/* Gravity vector*/
+gravity[1]:0;
+gravity[2]:-9.81;
+gravity[3]:0;
+
+/* Eventual constants*/
+l0:1.2;
+l1:1.1;
+
+/*  Inertia characteristics*/
+mass[1]:1.1;
+mass[2]:0.9;
+Ixx[1]:1;
+Ixx[2]:1;
+Iyy[1]:1;
+Iyy[2]:1;
+Izz[1]:l0^2/12*mass[1];
+Izz[2]:l1^2/12*mass[2];
+
+/*  Definition of the position matrices*/
+T0G[1] : Trotz(q[1]) . Tdisp(0,-l0/2,0);
+T0G[2] : Trotz(q[1]) . Tdisp(0,-l0,0) . Trotz(q[2]) . Tdisp(0,-l1/2,0);
+
+/*  Initial conditions*/
+qi[2]:1;
+
+/*  Simulation parameters*/
+FinalTime:5;
+StepSave:0.01;
+StepMax:0.005;
+
+SIMPLIFY:1;
+/*  Set FORCES to 1 in case you want to include *.AppEff.cpp into procedure
+ AddAppliedEfforts() to define forces other than gravity*/
+FORCES:0;
+/*  Set ANIM to 1 in case you want CaGEM to generate the skeleton code
+ for visualization and animation of the system */
+ANIM:1;
+/*  Set STATIC to 1 in case you want CaGEM to generate the code
+ to search for static equilibrium before integration*/
+STATIC:0;
+/*  Set PLOT to 1 in case you want CaGEM to generate the GNUPLOT code
+ to plot the evolution of position, velocity and acceeration*/
+PLOT:1;
+/*  SET LATEX_FR to 1 if you want the LaTeX report in French*/
+LATEX_FR:1;
+/*  SET LATEX_EN to 1 if you want the LaTeX report in English*/
+LATEX_EN:1;

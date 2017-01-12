@@ -1,0 +1,17 @@
+double R1=0.35, R2=0.05;
+structtyre tyre1;
+tyre1.r1=R1;
+  tyre1.r2=R2;
+  tyre1.Kz=100000;
+  tyre1.Cz=30;
+  tyre1.Fznom=500;
+  tyre1.Clongnom=4000;
+  tyre1.nlong=0.8;
+  tyre1.Clatnom=4000;
+  tyre1.nlat=0.8;
+  tyre1.Ccambernom=400;
+  tyre1.ncamber=0.8;
+  tyre1.fClbs=1.0;
+  tyre1.fClbd=0.8;
+AddTyreEfforts(1,vcoord(0,1,0),tyre1);
+AddTyreEfforts(2,vcoord(0,1,0),tyre1);

@@ -1,0 +1,297 @@
+<<gentran(literal("\/\* File generated form template cagem_cpp.tem on ", eval(timedate()), ". Do not edit! \*\/", cr))>>
+<<gentran(literal("\/\* Multibody system: ", eval(title), " \*\/", cr, cr))>>
+
+//    copyright (C) 2003 Olivier VERLINDEN
+//    Service de Mecanique rationnelle, Dynamique et Vibrations
+//    Faculte Polytechnique de Mons
+//    31, Bd Dolez, 7000 MONS (Belgium)
+//    Olivier.Verlinden@fpms.ac.be
+//
+// This file is part of EasyDyn
+//
+// EasyDyn is free software; you can redistribute it and/or modify it under the
+// terms of the GNU GeneralPublic License as published by the Free Software
+// Foundation; either version 2, or (at your option) any later version.
+//
+// EasyDyn is distributed in the hope that it will be useful, but WITHOUT ANY
+// WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+// A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License along with 
+// EasyDyn; see the file COPYING.  If not, write to the Free Software
+// Foundation, 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+
+
+#define EASYDYNMBSMAIN  // to declare the global variable 
+<<if ADVANCED = 1 then gentran(literal("#define EASYDYNMBSADVANCED  // to declare the global variable", cr))>>
+
+#include <math.h> 
+#include <EasyDyn/mbs.h> 
+<<if ANIM=1 then gentran(literal("#include <EasyDyn/visu.h>", cr, "#include <EasyDyn/vec.h>", cr, "#include <fstream>", cr, "using namespace std\;", cr, "scene thescene\;", cr, "ofstream VanFile\;", cr))>>
+
+//---------------------------------------------------
+void WriteDataHeader(ostream &OutFile) {
+    WriteStateVariablesHeader(OutFile);
+    OutFile <<gentran(literal("<<"))>> endl;
+}
+
+//---------------------------------------------------
+void SaveData(ostream &OutFile) {
+    SaveStateVariables(OutFile);
+    OutFile <<gentran(literal("<<"))>> endl;
+<<if ANIM=1 then gentran(literal("    thescene.WriteCoord(VanFile)\;", cr))>> 
+}
+
+//---------------------------------------------------
+void SetInertiaData() {
+<<block([i, i_], 
+    ?ccurrind\*: 4,
+    for i:1 thru nbrbody do (
+        i_: i-1,
+        do_assign(concat('body, "[", i_, "].", 'mass), mass[i]),
+        gentran(literal(cr))),
+    for i:1 thru nbrbody do (
+        i_: i-1,
+        do_assign(concat('body, "[", i_, "].", "PhiG.Ixx"), IG[i][1,1]),
+        do_assign(concat('body, "[", i_, "].", "PhiG.Iyy"), IG[i][2,2]),
+        do_assign(concat('body, "[", i_, "].", "PhiG.Izz"), IG[i][3,3]),
+        do_assign(concat('body, "[", i_, "].", "PhiG.Ixy"), IG[i][1,2]),
+        do_assign(concat('body, "[", i_, "].", "PhiG.Ixz"), IG[i][1,3]),
+        do_assign(concat('body, "[", i_, "].", "PhiG.Iyz"), IG[i][2,3]),
+        gentran(literal(cr))))>>
+}
+
+//---------------------------------------------------
+void ComputeMotion() {
+<<block([i, i_], 
+    ?ccurrind\*: 4,
+    if nbrdep > 0 then gentran(literal("// Dependant variables", cr)),
+    for i:1 thru nbrdep do (
+        i_: i-1,
+        gentran(lrsetq('p[i_], pi[i])),
+        gentran(lrsetq('pd[i_], pdi[i])),
+        gentran(lrsetq('pdd[i_], pddi[i])),
+        gentran(literal(cr))))>>
+        
+// Homogenous transformation matrices of each body
+<<block([i, i_, j, k, co: ["x", "y", "z"]], 
+    ?ccurrind\*: 4,
+    for i:1 thru nbrbody do (
+        i_: i-1,
+        if index_relative[i]=0 then (
+            for j:1 thru 3 do (
+                for k:1 thru 3 do (
+                    do_assign(concat("body[", i_, "].T0G.R.r", j, k), T0G[i][j,k])
+                )
+            ),
+            for j:1 thru 3 do (
+                do_assign(concat("body[", i_, "].T0G.e.", co[j]), T0G[i][j,4])
+            )
+        ) else (
+            for j:1 thru 3 do (
+                for k:1 thru 3 do (
+                    do_assign(concat("body[", i_, "].TrefG.R.r", j, k), T0G[i][j,k])
+                )
+            ),
+            for j:1 thru 3 do (
+                do_assign(concat("body[", i_, "].TrefG.e.", co[j]), T0G[i][j,4])
+            )
+        ),
+        gentran(literal(cr))))>>
+
+// Velocity vectors of the center of gravity of each body
+<<block([i, i_, j, k, co: ["x", "y", "z"]], 
+    ?ccurrind\*: 4,
+    for i:1 thru nbrbody do (
+        i_: i-1,
+        if index_relative[i]=0 then (
+            for j:1 thru 3 do (
+                do_assign(concat("body[", i_, "].vG.", co[j]), vG[i][j, 1])
+            )
+        ) else (
+            for j:1 thru 3 do (
+                do_assign(concat("body[", i_, "].vGrel.", co[j]), vG[i][j, 1])
+            )
+        ),
+        gentran(literal(cr))))>>
+
+// Rotational velocity vectors of each body
+<<block([i, i_, j, k, co: ["x", "y", "z"]], 
+    ?ccurrind\*: 4,
+    for i:1 thru nbrbody do (
+        i_: i-1,
+        if index_relative[i]=0 then (
+            for j:1 thru 3 do (
+                do_assign(concat("body[", i_, "].omega.", co[j]), omega[i][j, 1])
+            )
+        ) else (
+            for j:1 thru 3 do (
+                do_assign(concat("body[", i_, "].omegarel.", co[j]), omega[i][j, 1])
+            )
+        ),
+        gentran(literal(cr))))>>
+
+// Acceleration vectors of the center of gravity of each body
+<<block([i, i_, j, k, co: ["x", "y", "z"]], 
+    ?ccurrind\*: 4,
+    for i:1 thru nbrbody do (
+        i_: i-1,
+        if index_relative[i]=0 then (
+            for j:1 thru 3 do (
+                do_assign(concat("body[", i_, "].aG.", co[j]), aG[i][j, 1])
+            )
+        ) else (
+            for j:1 thru 3 do (
+                do_assign(concat("body[", i_, "].aGrel.", co[j]), aG[i][j, 1])
+            )
+        ),
+        gentran(literal(cr))))>>
+
+// Rotational acceleration vectors of each body
+<<block([i, i_, j, k, co: ["x", "y", "z"]], 
+    ?ccurrind\*: 4,
+    for i:1 thru nbrbody do (
+        i_: i-1,
+        if index_relative[i]=0 then (
+            for j:1 thru 3 do (
+                do_assign(concat("body[", i_, "].omegad.", co[j]), omegad[i][j, 1])
+            )
+        ) else (
+            for j:1 thru 3 do (
+                do_assign(concat("body[", i_, "].omegadrel.", co[j]), omegad[i][j, 1])
+            )
+        ),
+        gentran(literal(cr))))>>
+
+<<if apply("or", map(lambda([x], x=1), listarray(index_relative))) then gentran(literal("// Definition of relative motion", cr))>>
+
+<<block([i, i_], 
+    ?ccurrind\*: 4,
+    for i:1 thru nbrbody do (
+        i_: i-1,
+        if index_relative[i]=1 then (
+            gentran(literal("ComposeMotion(", eval(i_), ", ", eval(BodyRef[i]-1), ")\;", cr))
+        )
+    ))>>
+}
+
+<<block([i, i_, j, k, co: ["x", "y", "z"]], 
+    if ADVANCED = 1 then (
+        gentran(literal("void ComputePartialVelocities() {", cr)),
+        ?ccurrind\*: 4,                 
+        for i:1 thru nbrbody do (
+            i_: i-1,
+            for j:1 thru nbrdof do (
+                j_: j-1,
+                if vGpartial[i, j] # zeromatrix(3, 1) then (
+                    for k:1 thru 3 do (
+                        if index_relative[i]=0 then
+                            do_assign(concat("body[", i_, "].vGpartial[", j_,"].", co[k]), vGpartial[i, j][k, 1])
+                        else
+                            do_assign(concat("body[", i_, "].vGrelpartial[", j_,"].", co[k]), vGpartial[i, j][k, 1])
+                    ),
+                    gentran(literal(cr))
+                ),
+                if omegapartial[i, j] # zeromatrix(3, 1) then (
+                    for k:1 thru 3 do (
+                        if index_relative[i]=0 then
+                            do_assign(concat("body[", i_, "].omegapartial[", j_,"].", co[k]), omegapartial[i, j][k, 1])
+                        else
+                            do_assign(concat("body[", i_, "].omegarelpartial[", j_,"].", co[k]), omegapartial[i, j][k, 1])
+                    ),
+                    gentran(literal(cr))     
+                )
+            ),
+            if index_relative[i]=1 then (
+                gentran(literal("    ComposePartialVelocities(", eval(i_), ", ", eval(BodyRef[i]-1), ")\;", cr))
+            ),
+            gentran(literal(cr))
+        ),
+        ?ccurrind\*: 0,
+        gentran(literal("}", cr))    
+    ))>>
+
+//----------------------------------------------------
+void AddAppliedEfforts() {
+// Contribution of gravity
+<<block(
+    ?ccurrind\*: 4,
+    gentran(literal("    vec gravity(", eval(float(gravity[1])), ", ", eval(float(gravity[2])), ", ", eval(float(gravity[3])), ")\;", cr))
+    )>>
+    
+    AddGravityForces(gravity);
+    
+<<block(
+    ?ccurrind\*: 4,
+    if FORCES=1 then (
+        gentran(literal("// Contribution of external forces", cr)),
+        gentran(literal("#include \"", eval(filename), ".AppEff.cpp\"", cr))
+    ))>>
+}
+
+//-----------------------------------------------------
+void ComputeResidual() {
+    ComputeResidualmbs();
+}
+
+//-----------------------------------------------------
+int main() {
+// Initialisation and memory allocation
+<<?ccurrind\*: 4>>
+<<off('float)>>
+<<gentran(rsetq(nbrdof, nbrdof))>>
+<<gentran(rsetq(nbrbody, nbrbody))>>
+<<if nbrdep > 0 then gentran(rsetq(nbrdep, nbrdep))>>
+<<on('float)>>
+
+<<gentran(literal("    application= \"", eval(filename), "\"\;", cr))>>
+
+    InitEasyDynmbs();
+<<if ANIM=1 then (
+    gentran(literal("// Let's create the shapes and add the shapes to the scene ", cr)),
+    for i:1 thru nbrbody do (
+        gentran(literal("    shape *s", eval(i-1), "= new box(&(body[", eval(i-1), "].T0G),vcoord(-0.1,-0.1,-0.1),vcoord(0.1,0.1,0.1),1,2)\;", cr)),
+        gentran(literal("    thescene.AddShape(s", eval(i-1), ")\;", cr))
+    ),
+    gentran(literal("// Uncomment the following line if you want a moving observer", cr)),
+    gentran(literal("// thescene.SetVisuFrame(&Tref)\;", cr)),
+    gentran(literal("// Let's open an animation file", cr)),
+    gentran(literal("    VanFile.open(\"", eval(filename), ".van\")\;", cr)) 
+)>>
+ 
+// Initial configuration
+<<block([j], 
+    ?ccurrind\*: 4,
+    for j:1 thru nbrdof do (
+        do_assign(concat("q[", j-1, "]"), qi[j]),
+        do_assign(concat("qd[", j-1, "]"), qdi[j])
+    ))>>
+
+<<block([j], 
+    ?ccurrind\*: 4,
+    if STATIC=1 then (
+        gentran(literal("// Let's first search for the static equilibrium", cr)),
+        gentran(literal("    int *doflocked\;", cr)),
+        gentran(literal("    doflocked=new int[nbrdof]\;", cr)),
+        for j:1 thru nbrdof do (              
+            gentran(literal("    doflocked[", eval(j-1), "]= 0\;", cr))
+        ),          
+        gentran(literal("    StaticEquilibrium(doflocked)\;", cr))
+    ))>>
+        
+<<block([j], 
+    ?ccurrind\*: 4,
+    if ANIM=1 then (
+        gentran(literal("// Let's save the structure of the scene ", cr)),
+        gentran(literal("    ComputeMotion()\;", cr)),
+        gentran(literal("    thescene.CreateVolFile(\"", eval(filename), ".vol\")\;", cr))
+    ))>>
+    
+// Let's go !
+<<gentran(literal("    NewmarkIntegration(", eval(float(FinalTime)), ", ", eval(float(StepSave)), ", ", eval(float(StepMax)), ")\;", cr))>>
+
+// The clean way to finish 
+    EndEasyDynmbs();
+<<if ANIM=1 then gentran(literal("    VanFile.close()\;", cr))>>
+
+}
