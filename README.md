@@ -1,3 +1,5 @@
+# This project is now superseded by the complete rework in https://github.com/jgeisler0303/CADyn
+
 Introduction
 ============
 This is a replacement/translation of the [MuPAD](https://de.wikipedia.org/wiki/MuPAD) script `cagem.mu` from the [EasyDyn](http://hosting.umons.ac.be/html/mecara/EasyDyn/) software. The script is ported to [Maxima](http://maxima.sourceforge.net/) in order to make EasyDyn usable again with a completely free software tool-chain.
